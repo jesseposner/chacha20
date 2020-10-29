@@ -7,6 +7,7 @@ def chacha20_decrypt(key, counter, nonce, ciphertext):
 def chacha20_encrypt(key, counter, nonce, plaintext):
     byte_length = len(plaintext)
     full_blocks = byte_length//64
+    remainder_bytes = byte_length % 64
     encrypted_message = b''
 
     for i in range(full_blocks):
@@ -14,10 +15,10 @@ def chacha20_encrypt(key, counter, nonce, plaintext):
         plaintext_block = plaintext[i*64:i*64+64]
         encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(64)]
         encrypted_message += bytes(encrypted_block)
-    if byte_length % 64 != 0:
+    if remainder_bytes != 0:
         key_stream = serialize(chacha20_block(key, counter + full_blocks, nonce))
         plaintext_block = plaintext[full_blocks*64:byte_length]
-        encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(byte_length % 64)]
+        encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(remainder_bytes)]
         encrypted_message += bytes(encrypted_block)
 
     return encrypted_message
