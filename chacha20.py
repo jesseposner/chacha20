@@ -10,12 +10,12 @@ def chacha20_encrypt(key, counter, nonce, plaintext):
     encrypted_message = b''
 
     for i in range(full_blocks):
-        key_stream = serialize(chacha20_block(key, [counter[0] + i], nonce))
+        key_stream = serialize(chacha20_block(key, counter + i, nonce))
         plaintext_block = plaintext[i*64:i*64+64]
         encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(64)]
         encrypted_message += bytes(encrypted_block)
     if byte_length % 64 != 0:
-        key_stream = serialize(chacha20_block(key, [counter[0] + full_blocks], nonce))
+        key_stream = serialize(chacha20_block(key, counter + full_blocks, nonce))
         plaintext_block = plaintext[full_blocks*64:byte_length]
         encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(byte_length % 64)]
         encrypted_message += bytes(encrypted_block)
@@ -25,7 +25,7 @@ def chacha20_encrypt(key, counter, nonce, plaintext):
 # returns a list of 16 32-bit unsigned integers
 def chacha20_block(key, counter, nonce):
     BLOCK_CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
-    init_state = BLOCK_CONSTANTS + key + counter + nonce
+    init_state = BLOCK_CONSTANTS + key + [counter] + nonce
     current_state = init_state[:]
     for i in range(10):
         inner_block(current_state)
@@ -118,11 +118,11 @@ def runtests():
     key_bytes = bytes.fromhex(KEY)
     # split 256-bit key into list of 8 unsigned 32-bit integers
     key = [int.from_bytes(key_bytes[i*4:i*4+4], byteorder='big') for i in range(8)]
-    counter = [0x00000001]
+    init_counter = 0x00000001
     nonce_bytes = bytes.fromhex(NONCE_1)
     # split 96-bit nonce into list of 3 unsigned 32-bit integers
     nonce = [int.from_bytes(nonce_bytes[i*4:i*4+4], byteorder='big') for i in range(3)]
-    block = chacha20_block(key, counter, nonce)
+    block = chacha20_block(key, init_counter, nonce)
     expected_block = [
         0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3,
         0xc7f4d1c7, 0x0368c033, 0x9aaa2204, 0x4e6cd4c3,
@@ -146,7 +146,7 @@ def runtests():
     nonce = [int.from_bytes(nonce_bytes[i*4:i*4+4], byteorder='big') for i in range(3)]
     plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
 
-    first_block = chacha20_block(key, [counter[0]], nonce)
+    first_block = chacha20_block(key, init_counter, nonce)
     expected_first_block = [
         0xf3514f22, 0xe1d91b40, 0x6f27de2f, 0xed1d63b8,
         0x821f138c, 0xe2062c3d, 0xecca4f7e, 0x78cff39e,
@@ -154,7 +154,7 @@ def runtests():
         0x40ba4c79, 0xcd343ec6, 0x4c2c21ea, 0xb7417df0
     ]
     assert(first_block == expected_first_block)
-    second_block = chacha20_block(key, [counter[0] + 1], nonce)
+    second_block = chacha20_block(key, init_counter + 1, nonce)
     expected_second_block = [
         0x9f74a669, 0x410f633f, 0x28feca22, 0x7ec44dec,
         0x6d34d426, 0x738cb970, 0x3ac5e9f3, 0x45590cc4,
@@ -172,7 +172,7 @@ def runtests():
     ]
     assert((serialize(first_block) + serialize(second_block))[:len(plaintext)] == bytes(expected_key_stream))
 
-    ciphertext = chacha20_encrypt(key, counter, nonce, plaintext)
+    ciphertext = chacha20_encrypt(key, init_counter, nonce, plaintext)
     expected_ciphertext = [
         0x6e, 0x2e, 0x35, 0x9a, 0x25, 0x68, 0xf9, 0x80, 0x41, 0xba, 0x07, 0x28, 0xdd, 0x0d, 0x69, 0x81,
         0xe9, 0x7e, 0x7a, 0xec, 0x1d, 0x43, 0x60, 0xc2, 0x0a, 0x27, 0xaf, 0xcc, 0xfd, 0x9f, 0xae, 0x0b,
@@ -184,7 +184,7 @@ def runtests():
         0x87, 0x4d
     ]
     assert(ciphertext == bytes(expected_ciphertext))
-    assert(chacha20_decrypt(key, counter, nonce, ciphertext) == plaintext)
+    assert(chacha20_decrypt(key, init_counter, nonce, ciphertext) == plaintext)
 
     print("All tests passed!")
 
