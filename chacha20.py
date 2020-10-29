@@ -5,6 +5,9 @@ CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
 def main():
     runtests()
 
+def chacha20_decrypt(key, counter, nonce, ciphertext):
+    return chacha20_encrypt(key, counter, nonce, ciphertext)
+
 def chacha20_encrypt(key, counter, nonce, plaintext):
     byte_length = len(plaintext)
     full_blocks = byte_length//64
