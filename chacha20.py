@@ -1,5 +1,3 @@
-BLOCK_CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
-
 def main():
     runtests()
 
@@ -26,6 +24,7 @@ def chacha20_encrypt(key, counter, nonce, plaintext):
 
 # returns a list of 16 32-bit unsigned integers
 def chacha20_block(key, counter, nonce):
+    BLOCK_CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
     init_state = BLOCK_CONSTANTS + key + counter + nonce
     current_state = init_state[:]
     for i in range(10):
