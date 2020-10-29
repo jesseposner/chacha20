@@ -75,11 +75,8 @@ def quarterround(state, i1, i2, i3, i4):
 def serialize(block):
     return b''.join([(word).to_bytes(4, 'little') for word in block])
 
+# Test Vectors from RFC 8439
 def runtests():
-    KEY = "03020100070605040b0a09080f0e0d0c13121110171615141b1a19181f1e1d1c13121110171615141b1a19181f1e1d1c"
-    NONCE_1 = "090000004a00000000000000"
-    NONCE_2 = "000000004a00000000000000"
-
     # section 2.1
     a = 0x11111111
     b = 0x01020304
@@ -117,6 +114,8 @@ def runtests():
     assert(state == expected_state)
 
     # section 2.3.2
+    KEY = "03020100070605040b0a09080f0e0d0c13121110171615141b1a19181f1e1d1c13121110171615141b1a19181f1e1d1c"
+    NONCE_1 = "090000004a00000000000000"
     key_bytes = bytes.fromhex(KEY)
     # split 256-bit key into list of 8 unsigned 32-bit integers
     key = [int.from_bytes(key_bytes[i*4:i*4+4], byteorder='big') for i in range(8)]
@@ -143,9 +142,10 @@ def runtests():
     assert(serialized_block == bytes(expected_bytes))
 
     # section 2.4.2
-    plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
+    NONCE_2 = "000000004a00000000000000"
     nonce_bytes = bytes.fromhex(NONCE_2)
     nonce = [int.from_bytes(nonce_bytes[i*4:i*4+4], byteorder='big') for i in range(3)]
+    plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
 
     first_block = chacha20_block(key, [counter[0]], nonce)
     expected_first_block = [
