@@ -5,6 +5,24 @@ CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
 def main():
     runtests()
 
+def chacha20_encrypt(key, counter, nonce, plaintext):
+    byte_length = len(plaintext)
+    full_blocks = byte_length//64
+    encrypted_message = b''
+
+    for i in range(full_blocks):
+        key_stream = serialize(chacha20_block(key, [counter[0] + i], nonce))
+        plaintext_block = plaintext[i*64:i*64+64]
+        encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(64)]
+        encrypted_message += bytes(encrypted_block)
+    if byte_length % 64 != 0:
+        key_stream = serialize(chacha20_block(key, [counter[0] + full_blocks], nonce))
+        plaintext_block = plaintext[full_blocks*64:byte_length]
+        encrypted_block = [plaintext_block[j] ^ key_stream[j] for j in range(byte_length % 64)]
+        encrypted_message += bytes(encrypted_block)
+
+    return encrypted_message
+
 def chacha20_block(key, counter, nonce):
     init_state = CONSTANTS + key + counter + nonce
     current_state = init_state[:]
