@@ -1,6 +1,4 @@
-KEY = "03020100070605040b0a09080f0e0d0c13121110171615141b1a19181f1e1d1c13121110171615141b1a19181f1e1d1c"
-NONCE = "090000004a00000000000000"
-CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
+BLOCK_CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
 
 def main():
     runtests()
@@ -26,8 +24,9 @@ def chacha20_encrypt(key, counter, nonce, plaintext):
 
     return encrypted_message
 
+# returns a list of 16 32-bit unsigned integers
 def chacha20_block(key, counter, nonce):
-    init_state = CONSTANTS + key + counter + nonce
+    init_state = BLOCK_CONSTANTS + key + counter + nonce
     current_state = init_state[:]
     for i in range(10):
         inner_block(current_state)
@@ -77,6 +76,10 @@ def serialize(block):
     return b''.join([(word).to_bytes(4, 'little') for word in block])
 
 def runtests():
+    KEY = "03020100070605040b0a09080f0e0d0c13121110171615141b1a19181f1e1d1c13121110171615141b1a19181f1e1d1c"
+    NONCE_1 = "090000004a00000000000000"
+    NONCE_2 = "000000004a00000000000000"
+
     a = 0x11111111
     b = 0x01020304
     c = 0x77777777
